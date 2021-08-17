@@ -54,14 +54,6 @@ void CreateProxyHelper(
                                      std::move(request_handler));
 }
 
-bool DisableRequestHandlingForTesting() {
-  static bool disabled([]() -> bool {
-    return base::CommandLine::ForCurrentProcess()->HasSwitch(
-        switches::kDisableRequestHandlingForTesting);
-  }());
-  return disabled;
-}
-
 }  // namespace
 
 // Owns all of the ProxyURLLoaderFactorys for a given BrowserContext. Since
@@ -1312,7 +1304,8 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
     return;
   }
 
-  if (DisableRequestHandlingForTesting()) {
+  bool pass_through = !request.url.SchemeIs("devtools");
+  if (pass_through) {
     // This is the so-called pass-through, no-op option.
     if (target_factory_) {
       target_factory_->CreateLoaderAndStart(std::move(receiver), request_id,
